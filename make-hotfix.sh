@@ -7,7 +7,7 @@ die() {
 }
 
 # check that we have one argument
-[ $# -ne 1 ] && die "Usage: $0 <suffix>\nExample: $0 TICKET-123"
+[ $# -ne 1 ] && die "Usage: $0 <suffix>\nExample: $0 scrXXXXXX"
 
 # check that suffix is valid
 suffix="$1"
@@ -56,5 +56,3 @@ echo "2. Push to remote (example: git push $remote $hotfix_branch)"
 echo "3. Create MR to master"
 echo "4. Merge MR to master"
 echo "5. Run build" 
-echo "6. [Optional] Add tag to master (only on master)"
-echo "7. [Optional] Create MR master -> develop to sync them"

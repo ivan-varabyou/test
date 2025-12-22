@@ -12,14 +12,14 @@ bump_minor() {
     echo "$major.$((minor+1)).0"
 }
 
-# check jq
-command -v jq &> /dev/null || die "jq not installed"
+# check node
+command -v node &> /dev/null || die "node not installed"
 
 # get project info: name, branch, remote, current version
-project=$(jq -r .name < ./package.json 2>/dev/null || die "Cannot read package.json")
+project=$(node -p "require('./package.json').name" 2>/dev/null || die "Cannot read package.json")
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || die "Not a git repository")
 remote=$(git remote | head -n 1)
-current_version=$(jq -r .version < ./package.json 2>/dev/null || die "Cannot read version")
+current_version=$(node -p "require('./package.json').version" 2>/dev/null || die "Cannot read version")
 
 # print project info
 echo "Project: $project"
@@ -58,13 +58,12 @@ git rev-parse --verify "v${new_version}" &>/dev/null && die "Tag v${new_version}
 echo "Creating branch $release_branch..."
 git checkout -b "$release_branch"
 
-# update version in package.json and package.ver
+# update version in package.json
 echo "Updating version..."
-jq ".version = \"$new_version\"" package.json > package.json.tmp && mv package.json.tmp package.json
-echo "$new_version" > package.ver
+node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.version = '$new_version'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
 
 # commit changes
-git add package.json package.ver
+git add package.json
 git commit -m "SCR #0 - $type: $release_branch"
 
 # push release branch
@@ -78,5 +77,3 @@ echo ""
 echo "Manual steps:"
 echo "1. Create MR to master and merge"
 echo "2. Run build"
-echo "3. [Optional] Add tag to master (only on master)"
-echo "4. [Optional] Create MR master -> develop to sync them"
