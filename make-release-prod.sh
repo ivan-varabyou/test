@@ -12,14 +12,12 @@ bump_minor() {
     echo "$major.$((minor+1)).0"
 }
 
-# check node
-command -v node &> /dev/null || die "node not installed"
 
 # get project info: name, branch, remote, current version
-project=$(node -p "require('./package.json').name" 2>/dev/null || die "Cannot read package.json")
+project=$(grep '"name":' package.json | head -1 | cut -d '"' -f 4)
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || die "Not a git repository")
 remote=$(git remote | head -n 1)
-current_version=$(node -p "require('./package.json').version" 2>/dev/null || die "Cannot read version")
+current_version=$(grep '"version":' package.json | head -1 | cut -d '"' -f 4)
 
 # print project info
 echo "Project: $project"
@@ -60,7 +58,7 @@ git checkout -b "$release_branch"
 
 # update version in package.json
 echo "Updating version..."
-node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.version = '$new_version'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
+sed -i "0,/\"version\": \"[^\"]*\"/s/\"version\": \"[^\"]*\"/\"version\": \"$new_version\"/" package.json
 
 # commit changes
 git add package.json
